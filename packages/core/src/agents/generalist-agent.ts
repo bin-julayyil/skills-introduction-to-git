@@ -1,0 +1,78 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { z } from 'zod';
+import type { Config } from '../config/config.js';
+import { getCoreSystemPrompt } from '../core/prompts.js';
+import type { LocalAgentDefinition } from './types.js';
+import { DiscoveredMCPTool } from '../tools/mcp-tool.js';
+
+const GeneralistAgentSchema = z.object({
+  response: z.string().describe('The final response from the agent.'),
+});
+
+/**
+ * A general-purpose AI agent with access to all tools.
+ * It uses the same core system prompt as the main agent but in a non-interactive mode.
+ */
+export const GeneralistAgent = (
+  config: Config,
+): LocalAgentDefinition<typeof GeneralistAgentSchema> => ({
+  kind: 'local',
+  name: 'generalist',
+  displayName: 'Generalist Agent',
+  description: `A general-purpose AI agent with access to all tools.
+    - ALWAYS use it to break up and parallelize independent pieces of a larger task, when possible.
+    `,
+  inputConfig: {
+    inputSchema: {
+      type: 'object',
+      properties: {
+        request: {
+          type: 'string',
+          description: 'The task or question for the generalist agent.',
+        },
+      },
+      required: ['request'],
+    },
+  },
+  outputConfig: {
+    outputName: 'result',
+    description: 'The final answer or results of the task.',
+    schema: GeneralistAgentSchema,
+  },
+  modelConfig: {
+    model: 'inherit',
+  },
+  get toolConfig() {
+    const tools = config
+      .getToolRegistry()
+      .getAllTools()
+      .map((tool) => {
+        if (tool instanceof DiscoveredMCPTool) {
+          return tool.getFullyQualifiedName();
+        }
+        return tool.name;
+      });
+    return {
+      tools,
+    };
+  },
+  get promptConfig() {
+    return {
+      systemPrompt: getCoreSystemPrompt(
+        config,
+        /*useMemory=*/ undefined,
+        /*interactiveOverride=*/ false,
+      ),
+      query: '${request}',
+    };
+  },
+  runConfig: {
+    maxTimeMinutes: 10,
+    maxTurns: 20,
+  },
+});
