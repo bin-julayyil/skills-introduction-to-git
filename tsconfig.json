@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "forceConsistentCasingInFileNames": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "verbatimModuleSyntax": true,
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "target": "es2022",
+    "types": ["node", "vitest/globals"],
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@google/gemini-cli-core": ["./packages/core/index.ts"],
+      "@google/gemini-cli-core/*": ["./packages/core/*"],
+      "@google/gemini-cli-a2a-server": ["./packages/a2a-server/index.ts"],
+      "@google/gemini-cli-a2a-server/*": ["./packages/a2a-server/*"],
+      "@google/gemini-cli": ["./packages/cli/index.ts"],
+      "@google/gemini-cli/*": ["./packages/cli/*"],
+      "@google/gemini-cli-test-utils": ["./packages/test-utils/src/index.ts"],
+      "@google/gemini-cli-test-utils/*": ["./packages/test-utils/src/*"]
+    }
+  }
+}
