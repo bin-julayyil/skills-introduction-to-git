@@ -1,0 +1,375 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AskUserDialog > Choice question placeholder > uses default placeholder when not provided 1`] = `
+"Select your preferred language:
+
+  1.  TypeScript
+  2.  JavaScript
+● 3.  Enter a custom value
+
+Enter to submit · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > Choice question placeholder > uses default placeholder when not provided 2`] = `
+"
+  ERROR  Cannot read properties of undefined (reading '$$typeof')
+
+ /Users/spencertang/Workspace/gemini-cli/node_modules/react/cjs/react.developme
+ nt.js:1208:15
+
+ 1205:     };
+ 1206:     exports.useContext = function (Context) {
+ 1207:       var dispatcher = resolveDispatcher();
+ 1208:       Context.$$typeof === REACT_CONSUMER_TYPE &&
+ 1209:         console.error(
+ 1210           "Calling useContext(Context.Consumer) is not supported and will
+ :   cause bugs. Did you mean to call useContext(Context) instead?"
+ 1211:         );
+
+ -process.env.NODE_ENV.expo 
+  ts.useContext            (/Users/spencertang/Workspace/gemini-cli/node_module
+                           s/react/cjs/react.development.js:1208:15)
+ - useTerminalCapabilities (src/ui/hooks/useTerminalCapabilities.ts:15:19)
+ - useAlternateBuffer (src/ui/hooks/useAlternateBuffer.ts:15:24)
+ - ChoiceQuestionView (src/ui/components/AskUserDialog.tsx:484:29)
+ -Object.react-stack-bot 
+  om-frame              (/Users/spencertang/Workspace/gemini-cli/node_modules/r
+                        eact-reconciler/cjs/react-reconciler.development.js:158
+                        59:20)
+ -renderWithHo 
+  ks          (/Users/spencertang/Workspace/gemini-cli/node_modules/react-recon
+              ciler/cjs/react-reconciler.development.js:3221:22)
+ -updateFunctionCom 
+  onent            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-
+                   reconciler/cjs/react-reconciler.development.js:6475:19)
+ -beginWor 
+          (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconcile
+          r/cjs/react-reconciler.development.js:8009:18)
+ -runWithFiberIn 
+  EV            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-rec
+                onciler/cjs/react-reconciler.development.js:1738:13)
+ -performUnitOfW 
+  rk            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-rec
+                onciler/cjs/react-reconciler.development.js:12834:22)
+"
+`;
+
+exports[`AskUserDialog > Choice question placeholder > uses placeholder for "Other" option when provided 1`] = `
+"Select your preferred language:
+
+  1.  TypeScript
+  2.  JavaScript
+● 3.  Type another language...
+
+Enter to submit · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > Choice question placeholder > uses placeholder for "Other" option when provided 2`] = `
+"
+  ERROR  Cannot read properties of undefined (reading '$$typeof')
+
+ /Users/spencertang/Workspace/gemini-cli/node_modules/react/cjs/react.developme
+ nt.js:1208:15
+
+ 1205:     };
+ 1206:     exports.useContext = function (Context) {
+ 1207:       var dispatcher = resolveDispatcher();
+ 1208:       Context.$$typeof === REACT_CONSUMER_TYPE &&
+ 1209:         console.error(
+ 1210           "Calling useContext(Context.Consumer) is not supported and will
+ :   cause bugs. Did you mean to call useContext(Context) instead?"
+ 1211:         );
+
+ -process.env.NODE_ENV.expo 
+  ts.useContext            (/Users/spencertang/Workspace/gemini-cli/node_module
+                           s/react/cjs/react.development.js:1208:15)
+ - useTerminalCapabilities (src/ui/hooks/useTerminalCapabilities.ts:15:19)
+ - useAlternateBuffer (src/ui/hooks/useAlternateBuffer.ts:15:24)
+ - ChoiceQuestionView (src/ui/components/AskUserDialog.tsx:484:29)
+ -Object.react-stack-bot 
+  om-frame              (/Users/spencertang/Workspace/gemini-cli/node_modules/r
+                        eact-reconciler/cjs/react-reconciler.development.js:158
+                        59:20)
+ -renderWithHo 
+  ks          (/Users/spencertang/Workspace/gemini-cli/node_modules/react-recon
+              ciler/cjs/react-reconciler.development.js:3221:22)
+ -updateFunctionCom 
+  onent            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-
+                   reconciler/cjs/react-reconciler.development.js:6475:19)
+ -beginWor 
+          (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconcile
+          r/cjs/react-reconciler.development.js:8009:18)
+ -runWithFiberIn 
+  EV            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-rec
+                onciler/cjs/react-reconciler.development.js:1738:13)
+ -performUnitOfW 
+  rk            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-rec
+                onciler/cjs/react-reconciler.development.js:12834:22)
+"
+`;
+
+exports[`AskUserDialog > Scroll Arrows (useAlternateBuffer: false) > shows scroll arrows correctly when useAlternateBuffer is false 1`] = `
+"Choose an option
+
+▲
+●  1.  Option 1
+       Description 1
+   2.  Option 2
+       Description 2
+▼
+
+Enter to select · ↑/↓ to navigate · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > Scroll Arrows (useAlternateBuffer: true) > shows scroll arrows correctly when useAlternateBuffer is true 1`] = `
+"Choose an option
+
+●  1.  Option 1
+       Description 1
+   2.  Option 2
+       Description 2
+   3.  Option 3
+       Description 3
+   4.  Option 4
+       Description 4
+   5.  Option 5
+       Description 5
+   6.  Option 6
+       Description 6
+   7.  Option 7
+       Description 7
+   8.  Option 8
+       Description 8
+   9.  Option 9
+       Description 9
+  10.  Option 10
+       Description 10
+  11.  Option 11
+       Description 11
+  12.  Option 12
+       Description 12
+  13.  Option 13
+       Description 13
+  14.  Option 14
+       Description 14
+  15.  Option 15
+       Description 15
+  16.  Enter a custom value
+
+Enter to select · ↑/↓ to navigate · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > Scroll Arrows (useAlternateBuffer: true) > shows scroll arrows correctly when useAlternateBuffer is true 2`] = `
+"
+  ERROR  Cannot read properties of undefined (reading '$$typeof')
+
+ /Users/spencertang/Workspace/gemini-cli/node_modules/react/cjs/react.development.js:1208:15
+
+ 1205:     };
+ 1206:     exports.useContext = function (Context) {
+ 1207:       var dispatcher = resolveDispatcher();
+ 1208:       Context.$$typeof === REACT_CONSUMER_TYPE &&
+ 1209:         console.error(
+ 1210           "Calling useContext(Context.Consumer) is not supported and will cause bugs. Did you
+ :   mean to call useContext(Context) instead?"
+ 1211:         );
+
+ -process.env.NODE_ENV.exports 
+  useContext                  (/Users/spencertang/Workspace/gemini-cli/node_modules/react/cjs/react
+                              .development.js:1208:15)
+ - useTerminalCapabilities (src/ui/hooks/useTerminalCapabilities.ts:15:19)
+ - useAlternateBuffer (src/ui/hooks/useAlternateBuffer.ts:15:24)
+ - ChoiceQuestionView (src/ui/components/AskUserDialog.tsx:484:29)
+ -Object.react-stack-bott 
+  m-frame                (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs
+                         /react-reconciler.development.js:15859:20)
+ -renderWithHoo 
+  s            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-rec
+               onciler.development.js:3221:22)
+ -updateFunctionComp 
+  nent              (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/reac
+                    t-reconciler.development.js:6475:19)
+ -beginWor 
+          (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-reconcil
+          er.development.js:8009:18)
+ -runWithFiberIn 
+  EV            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-re
+                conciler.development.js:1738:13)
+ -performUnitOfW 
+  rk            (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-re
+                conciler.development.js:12834:22)
+"
+`;
+
+exports[`AskUserDialog > Text type questions > renders text input for type: "text" 1`] = `
+"What should we name this component?
+
+> e.g., UserProfileCard
+
+
+Enter to submit · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > Text type questions > shows correct keyboard hints for text type 1`] = `
+"Enter the variable name:
+
+> Enter your response
+
+
+Enter to submit · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > Text type questions > shows default placeholder when none provided 1`] = `
+"Enter the database connection string:
+
+> Enter your response
+
+
+Enter to submit · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > allows navigating to Review tab and back 1`] = `
+"← □ Tests │ □ Docs │ ≡ Review →
+
+Review your answers:
+
+⚠ You have 2 unanswered questions
+
+Tests → (not answered)
+Docs → (not answered)
+
+Enter to submit · Tab/Shift+Tab to edit answers · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > hides progress header for single question 1`] = `
+"Which authentication method should we use?
+
+● 1.  OAuth 2.0
+      Industry standard, supports SSO
+  2.  JWT tokens
+      Stateless, good for APIs
+  3.  Enter a custom value
+
+Enter to select · ↑/↓ to navigate · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > renders question and options 1`] = `
+"Which authentication method should we use?
+
+● 1.  OAuth 2.0
+      Industry standard, supports SSO
+  2.  JWT tokens
+      Stateless, good for APIs
+  3.  Enter a custom value
+
+Enter to select · ↑/↓ to navigate · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > shows Review tab in progress header for multiple questions 1`] = `
+"← □ Framework │ □ Styling │ ≡ Review →
+
+Which framework?
+
+● 1.  React
+      Component library
+  2.  Vue
+      Progressive framework
+  3.  Enter a custom value
+
+Enter to select · ←/→ to switch questions · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > shows keyboard hints 1`] = `
+"Which authentication method should we use?
+
+● 1.  OAuth 2.0
+      Industry standard, supports SSO
+  2.  JWT tokens
+      Stateless, good for APIs
+  3.  Enter a custom value
+
+Enter to select · ↑/↓ to navigate · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > shows progress header for multiple questions 1`] = `
+"← □ Database │ □ ORM │ ≡ Review →
+
+Which database should we use?
+
+● 1.  PostgreSQL
+      Relational database
+  2.  MongoDB
+      Document database
+  3.  Enter a custom value
+
+Enter to select · ←/→ to switch questions · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > shows warning for unanswered questions on Review tab 1`] = `
+"← □ License │ □ README │ ≡ Review →
+
+Review your answers:
+
+⚠ You have 2 unanswered questions
+
+License → (not answered)
+README → (not answered)
+
+Enter to submit · Tab/Shift+Tab to edit answers · Esc to cancel
+"
+`;
+
+exports[`AskUserDialog > shows warning for unanswered questions on Review tab 2`] = `
+"
+  ERROR  Cannot read properties of undefined (reading '$$typeof')
+
+ /Users/spencertang/Workspace/gemini-cli/node_modules/react/cjs/react.development.js:1208:15
+
+ 1205:     };
+ 1206:     exports.useContext = function (Context) {
+ 1207:       var dispatcher = resolveDispatcher();
+ 1208:       Context.$$typeof === REACT_CONSUMER_TYPE &&
+ 1209:         console.error(
+ 1210:           "Calling useContext(Context.Consumer) is not supported and will cause bugs. Did you mean to call
+      useContext(Context) instead?"
+ 1211:         );
+
+ -process.env.NODE_ENV.exports.useCo 
+  text                              (/Users/spencertang/Workspace/gemini-cli/node_modules/react/cjs/react.development.j
+                                    s:1208:15)
+ - useTerminalCapabilities (src/ui/hooks/useTerminalCapabilities.ts:15:19)
+ - useAlternateBuffer (src/ui/hooks/useAlternateBuffer.ts:15:24)
+ - ChoiceQuestionView (src/ui/components/AskUserDialog.tsx:484:29)
+ -Object.react-stack-botto 
+  -frame                  (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-reconciler.d
+                          evelopment.js:15859:20)
+ -renderWithHook 
+                (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-reconciler.development
+                .js:3221:22)
+ -updateFunctionCompo 
+  ent                (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-reconciler.develo
+                     pment.js:6475:19)
+ -beginWork 
+           (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-reconciler.development.js:8
+           009:18)
+ -runWithFiberInD 
+  V              (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-reconciler.developmen
+                 t.js:1738:13)
+ -performUnitOfWo 
+  k              (/Users/spencertang/Workspace/gemini-cli/node_modules/react-reconciler/cjs/react-reconciler.developmen
+                 t.js:12834:22)
+"
+`;
