@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ShellTool > getDescription > should return the non-windows description when not on windows 1`] = `"This tool executes a given shell command as \`bash -c <command>\`."`;
+
+exports[`ShellTool > getDescription > should return the windows description when on windows 1`] = `"This tool executes a given shell command as \`powershell.exe -NoProfile -Command <command>\`."`;
+
+exports[`ShellTool > getSchema > should return the base schema when no modelId is provided 1`] = `"This tool executes a given shell command as \`bash -c <command>\`."`;
+
+exports[`ShellTool > getSchema > should return the schema from the resolver when modelId is provided 1`] = `"This tool executes a given shell command as \`bash -c <command>\`."`;

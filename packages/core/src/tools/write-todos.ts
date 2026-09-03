@@ -1,0 +1,166 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import type { ToolInvocation } from './tools.js';
+import {
+  BaseDeclarativeTool,
+  BaseToolInvocation,
+  Kind,
+  type Todo,
+  type ToolResult,
+} from './tools.js';
+import type { Config } from '../config/config.js';
+import type { MessageBus } from '../confirmation-bus/message-bus.js';
+import { WRITE_TODOS_TOOL_NAME } from './tool-names.js';
+import { WRITE_TODOS_DEFINITION } from './definitions/coreTools.js';
+import { resolveToolDeclaration } from './definitions/resolver.js';
+
+const TODO_STATUSES = [
+  'pending',
+  'in_progress',
+  'completed',
+  'cancelled',
+] as const;
+
+export interface WriteTodosToolParams {
+  /**
+   * The full list of todos. This will overwrite any existing list.
+   */
+  todos: Todo[];
+}
+
+class WriteTodosToolInvocation extends BaseToolInvocation<
+  WriteTodosToolParams,
+  ToolResult
+> {
+  constructor(
+    params: WriteTodosToolParams,
+    messageBus: MessageBus,
+    _toolName?: string,
+    _toolDisplayName?: string,
+  ) {
+    super(params, messageBus, _toolName, _toolDisplayName);
+  }
+
+  getDescription(): string {
+    const count = this.params.todos?.length ?? 0;
+    if (count === 0) {
+      return 'Cleared todo list';
+    }
+    return `Set ${count} todo(s)`;
+  }
+
+  async execute(
+    _signal: AbortSignal,
+    _updateOutput?: (output: string) => void,
+  ): Promise<ToolResult> {
+    const todos = this.params.todos ?? [];
+    const todoListString = todos
+      .map(
+        (todo, index) => `${index + 1}. [${todo.status}] ${todo.description}`,
+      )
+      .join('\n');
+
+    const llmContent =
+      todos.length > 0
+        ? `Successfully updated the todo list. The current list is now:\n${todoListString}`
+        : 'Successfully cleared the todo list.';
+
+    return {
+      llmContent,
+      returnDisplay: { todos },
+    };
+  }
+}
+
+export class WriteTodosTool extends BaseDeclarativeTool<
+  WriteTodosToolParams,
+  ToolResult
+> {
+  static readonly Name = WRITE_TODOS_TOOL_NAME;
+
+  constructor(
+    private readonly config: Config,
+    messageBus: MessageBus,
+  ) {
+    const modelId =
+      typeof config.getActiveModel === 'function'
+        ? config.getActiveModel()
+        : undefined;
+    const { declaration, instructions } = resolveToolDeclaration(
+      WRITE_TODOS_DEFINITION,
+      modelId,
+    );
+    super(
+      WriteTodosTool.Name,
+      'WriteTodos',
+      declaration.description!,
+      Kind.Other,
+      declaration.parametersJsonSchema,
+      messageBus,
+      true, // isOutputMarkdown
+      false, // canUpdateOutput
+      undefined, // extensionName
+      undefined, // extensionId
+      instructions,
+    );
+  }
+
+  override getSchema(modelId?: string) {
+    const activeModel =
+      modelId ??
+      (typeof this.config.getActiveModel === 'function'
+        ? this.config.getActiveModel()
+        : undefined);
+    return resolveToolDeclaration(WRITE_TODOS_DEFINITION, activeModel)
+      .declaration;
+  }
+
+  protected override validateToolParamValues(
+    params: WriteTodosToolParams,
+  ): string | null {
+    const todos = params?.todos;
+    if (!params || !Array.isArray(todos)) {
+      return '`todos` parameter must be an array';
+    }
+
+    for (const todo of todos) {
+      if (typeof todo !== 'object' || todo === null) {
+        return 'Each todo item must be an object';
+      }
+      if (typeof todo.description !== 'string' || !todo.description.trim()) {
+        return 'Each todo must have a non-empty description string';
+      }
+      if (!TODO_STATUSES.includes(todo.status)) {
+        return `Each todo must have a valid status (${TODO_STATUSES.join(', ')})`;
+      }
+    }
+
+    const inProgressCount = todos.filter(
+      (todo: Todo) => todo.status === 'in_progress',
+    ).length;
+
+    if (inProgressCount > 1) {
+      return 'Invalid parameters: Only one task can be "in_progress" at a time.';
+    }
+
+    return null;
+  }
+
+  protected createInvocation(
+    params: WriteTodosToolParams,
+    messageBus: MessageBus,
+    _toolName?: string,
+    _displayName?: string,
+  ): ToolInvocation<WriteTodosToolParams, ToolResult> {
+    return new WriteTodosToolInvocation(
+      params,
+      messageBus,
+      _toolName,
+      _displayName,
+    );
+  }
+}
