@@ -1,0 +1,56 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import type React from 'react';
+import { Box, Text } from 'ink';
+import { theme } from '../semantic-colors.js';
+import { ApprovalMode } from '@google/gemini-cli-core';
+import { useTransientTip } from '../hooks/useTransientTip.js';
+
+interface ApprovalModeIndicatorProps {
+  approvalMode: ApprovalMode;
+}
+
+export const ApprovalModeIndicator: React.FC<ApprovalModeIndicatorProps> = ({
+  approvalMode,
+}) => {
+  const showTip = useTransientTip(approvalMode);
+  let textColor = '';
+  let textContent = '';
+  let subText = '';
+
+  switch (approvalMode) {
+    case ApprovalMode.AUTO_EDIT:
+      textColor = theme.status.warning;
+      textContent = 'accepting edits';
+      subText = ' (shift + tab to cycle)';
+      break;
+    case ApprovalMode.PLAN:
+      textColor = theme.status.success;
+      textContent = 'plan mode';
+      subText = ' (shift + tab to cycle)';
+      break;
+    case ApprovalMode.YOLO:
+      textColor = theme.status.error;
+      textContent = 'YOLO mode';
+      subText = ' (ctrl + y to toggle)';
+      break;
+    case ApprovalMode.DEFAULT:
+    default:
+      break;
+  }
+
+  return (
+    <Box>
+      <Text color={textColor}>
+        {textContent}
+        {showTip && subText && (
+          <Text color={theme.text.secondary}>{subText}</Text>
+        )}
+      </Text>
+    </Box>
+  );
+};
