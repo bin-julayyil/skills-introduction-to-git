@@ -1,0 +1,235 @@
+name: '🏷️ Gemini Automated Issue Triage'
+
+on:
+  issues:
+    types:
+      - 'opened'
+      - 'reopened'
+  issue_comment:
+    types:
+      - 'created'
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'issue number to triage'
+        required: true
+        type: 'number'
+  workflow_call:
+    inputs:
+      issue_number:
+        description: 'issue number to triage'
+        required: false
+        type: 'string'
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.event.issue.number || github.event.inputs.issue_number || inputs.issue_number }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: 'bash'
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+  issues: 'write'
+  statuses: 'write'
+  packages: 'read'
+  actions: 'write' # Required for cancelling a workflow run
+
+jobs:
+  triage-issue:
+    if: |-
+      (github.repository == 'google-gemini/gemini-cli' || github.repository == 'google-gemini/maintainers-gemini-cli') &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          (github.event_name == 'issues' || github.event_name == 'issue_comment') &&
+          (github.event_name != 'issue_comment' || (
+            contains(github.event.comment.body, '@gemini-cli /triage') &&
+            (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'COLLABORATOR')
+          ))
+        )
+      ) &&
+      !contains(github.event.issue.labels.*.name, 'area/')
+    timeout-minutes: 5
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Get issue data for manual trigger'
+        id: 'get_issue_data'
+        if: |-
+          github.event_name == 'workflow_dispatch'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |
+            const issueNumber = ${{ github.event.inputs.issue_number || inputs.issue_number }};
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+            });
+            core.setOutput('title', issue.title);
+            core.setOutput('body', issue.body);
+            core.setOutput('labels', issue.labels.map(label => label.name).join(','));
+            return issue;
+
+      - name: 'Manual Trigger Pre-flight Checks'
+        if: |-
+          github.event_name == 'workflow_dispatch'
+        env:
+          ISSUE_NUMBER_INPUT: '${{ github.event.inputs.issue_number || inputs.issue_number }}'
+          LABELS: '${{ steps.get_issue_data.outputs.labels }}'
+        run: |
+          if echo "${LABELS}" | grep -q 'area/'; then
+            echo "Issue #${ISSUE_NUMBER_INPUT} already has 'area/' label. Stopping workflow."
+            exit 1
+          fi
+
+          echo "Manual triage checks passed."
+
+      - name: 'Checkout'
+        uses: 'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8' # ratchet:actions/checkout@v5
+
+      - name: 'Generate GitHub App Token'
+        id: 'generate_token'
+        env:
+          APP_ID: '${{ secrets.APP_ID }}'
+        if: |-
+          ${{ env.APP_ID != '' }}
+        uses: 'actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b' # ratchet:actions/create-github-app-token@v2
+        with:
+          app-id: '${{ secrets.APP_ID }}'
+          private-key: '${{ secrets.PRIVATE_KEY }}'
+          permission-issues: 'write'
+
+      - name: 'Get Repository Labels'
+        id: 'get_labels'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}'
+          script: |-
+            const { data: labels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const allowedLabels = [
+              'area/agent',
+              'area/enterprise',
+              'area/non-interactive',
+              'area/core',
+              'area/security',
+              'area/platform',
+              'area/extensions',
+              'area/unknown'
+            ];
+            const labelNames = labels.map(label => label.name).filter(name => allowedLabels.includes(name));
+            core.setOutput('available_labels', labelNames.join(','));
+            core.info(`Found ${labelNames.length} labels: ${labelNames.join(', ')}`);
+            return labelNames;
+
+      - name: 'Run Gemini Issue Analysis'
+        uses: 'google-github-actions/run-gemini-cli@v0'
+        id: 'gemini_issue_analysis'
+        env:
+          GITHUB_TOKEN: '' # Do not pass any auth token here since this runs on untrusted inputs
+          ISSUE_TITLE: >-
+            ${{ github.event_name == 'workflow_dispatch' && steps.get_issue_data.outputs.title || github.event.issue.title }}
+          ISSUE_BODY: >-
+            ${{ github.event_name == 'workflow_dispatch' && steps.get_issue_data.outputs.body || github.event.issue.body }}
+          ISSUE_NUMBER: >-
+            ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.issue_number || inputs.issue_number) || github.event.issue.number }}
+          REPOSITORY: '${{ github.repository }}'
+          AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
+        with:
+          gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
+          gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
+          gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
+          gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          gemini_model: 'gemini-3-flash-preview'
+          use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
+          use_gemini_code_assist: '${{ vars.GOOGLE_GENAI_USE_GCA }}'
+          settings: |-
+            {
+              "maxSessionTurns": 25,
+              "telemetry": {
+                "enabled": true,
+                "target": "gcp"
+              },
+              "coreTools": [
+                "run_shell_command(echo)"
+              ]
+            }
+          prompt: '/gemini-triage'
+
+      - name: 'Apply Labels to Issue'
+        if: |-
+          ${{ steps.gemini_issue_analysis.outputs.summary != '' }}
+        env:
+          REPOSITORY: '${{ github.repository }}'
+          ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
+          LABELS_OUTPUT: '${{ steps.gemini_issue_analysis.outputs.summary }}'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}'
+          script: |
+            const rawOutput = process.env.LABELS_OUTPUT;
+            core.info(`Raw output from model: ${rawOutput}`);
+            
+            let parsed;
+            try {
+              // 1. Try extracting from markdown block first (safest)
+              const jsonMatch = rawOutput.match(/```json\s*([\s\S]*?)\s*```/) || rawOutput.match(/```\s*([\s\S]*?)\s*```/);
+              const jsonString = jsonMatch ? jsonMatch[1].trim() : rawOutput.trim();
+              
+              // 2. If no block, try parsing the whole thing (maybe it is pure JSON)
+              // 3. If that fails, try to find the first '{' and last '}'
+              let toParse = jsonString;
+              if (!jsonMatch) {
+                const start = rawOutput.indexOf('{');
+                const end = rawOutput.lastIndexOf('}');
+                if (start !== -1 && end !== -1 && end > start) {
+                  toParse = rawOutput.substring(start, end + 1);
+                }
+              }
+              
+              parsed = JSON.parse(toParse);
+            } catch (err) {
+              core.setFailed(`Failed to parse triage result. Error: ${err.message}\nRaw output: ${rawOutput}`);
+              return;
+            }
+
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER);
+            const labelsToAdd = parsed.labels_to_set || [];
+
+            if (labelsToAdd.length === 0) {
+              core.info(`No labels determined for #${issueNumber}.`);
+              return;
+            }
+
+            // Set labels based on triage result
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              labels: labelsToAdd
+            });
+            core.info(`Successfully added labels for #${issueNumber}: ${labelsToAdd.join(', ')}`);
+
+      - name: 'Post Issue Analysis Failure Comment'
+        if: |-
+          ${{ failure() && steps.gemini_issue_analysis.outcome == 'failure' }}
+        env:
+          ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
+          RUN_URL: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}'
+          script: |-
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(process.env.ISSUE_NUMBER),
+              body: 'There is a problem with the Gemini CLI issue triaging. Please check the [action logs](${process.env.RUN_URL}) for details.'
+            })

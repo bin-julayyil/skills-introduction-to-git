@@ -1,0 +1,184 @@
+name: '📋 Gemini Scheduled Issue Triage'
+
+on:
+  issues:
+    types:
+      - 'opened'
+      - 'reopened'
+  schedule:
+    - cron: '0 * * * *' # Runs every hour
+  workflow_dispatch:
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.event.number || github.run_id }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: 'bash'
+
+permissions:
+  id-token: 'write'
+  issues: 'write'
+
+jobs:
+  triage-issues:
+    timeout-minutes: 10
+    if: |-
+      ${{ github.repository == 'google-gemini/gemini-cli' }}
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8' # ratchet:actions/checkout@v5
+
+      - name: 'Generate GitHub App Token'
+        id: 'generate_token'
+        uses: 'actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b' # ratchet:actions/create-github-app-token@v2
+        with:
+          app-id: '${{ secrets.APP_ID }}'
+          private-key: '${{ secrets.PRIVATE_KEY }}'
+          permission-issues: 'write'
+
+      - name: 'Find untriaged issues'
+        if: |-
+          ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        id: 'find_issues'
+        env:
+          GITHUB_TOKEN: '${{ steps.generate_token.outputs.token }}'
+          GITHUB_REPOSITORY: '${{ github.repository }}'
+        run: |-
+          set -euo pipefail
+
+          echo '🔍 Finding issues missing area labels...'
+          NO_AREA_ISSUES="$(gh issue list --repo "${GITHUB_REPOSITORY}" \
+            --search 'is:open is:issue -label:area/core -label:area/agent -label:area/enterprise -label:area/non-interactive -label:area/security -label:area/platform -label:area/extensions -label:area/unknown' --limit 25 --json number,title,body)"
+
+          ISSUES="${NO_AREA_ISSUES}"
+
+          echo "${ISSUES}" > issues-to-triage.json
+
+          ISSUE_COUNT="$(echo "${ISSUES}" | jq 'length')"
+          if [ "${ISSUE_COUNT}" -gt 0 ]; then
+            echo "has_issues=true" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "✅ Found ${ISSUE_COUNT} unique issues to triage! 🎯"
+
+      - name: 'Get Repository Labels'
+        id: 'get_labels'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ steps.generate_token.outputs.token }}'
+          script: |-
+            const { data: labels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const labelNames = labels.map(label => label.name);
+            core.setOutput('available_labels', labelNames.join(','));
+            core.info(`Found ${labelNames.length} labels: ${labelNames.join(', ')}`);
+            return labelNames;
+
+      - name: 'Prepare Issues for Event'
+        if: |-
+          ${{ github.event_name == 'issues' }}
+        id: 'prepare_event_issue'
+        env:
+          ISSUE_EVENT: '${{ toJSON(github.event.issue) }}'
+        run: |
+          echo "$ISSUE_EVENT" | jq -c '[{number: .number, title: .title, body: .body}]' > issues-to-triage.json
+          echo "has_issues=true" >> "${GITHUB_OUTPUT}"
+
+      - name: 'Run Gemini Issue Analysis'
+        if: |-
+          ${{ steps.find_issues.outputs.has_issues == 'true' || steps.prepare_event_issue.outputs.has_issues == 'true' }}
+        uses: 'google-github-actions/run-gemini-cli@v0'
+        id: 'gemini_issue_analysis'
+        env:
+          GITHUB_TOKEN: '' # Do not pass any auth token here since this runs on untrusted inputs
+          REPOSITORY: '${{ github.repository }}'
+          AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
+        with:
+          gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
+          gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
+          gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
+          gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          gemini_model: 'gemini-3-flash-preview'
+          use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
+          use_gemini_code_assist: '${{ vars.GOOGLE_GENAI_USE_GCA }}'
+          settings: |-
+            {
+              "maxSessionTurns": 25,
+              "coreTools": [
+                "run_shell_command(echo)"
+              ],
+              "telemetry": {
+                "enabled": true,
+                "target": "gcp"
+              }
+            }
+          prompt: '/gemini-scheduled-triage'
+
+      - name: 'Apply Labels to Issues'
+        if: |-
+          ${{ steps.gemini_issue_analysis.outcome == 'success' &&
+              steps.gemini_issue_analysis.outputs.summary != '[]' }}
+        env:
+          REPOSITORY: '${{ github.repository }}'
+          LABELS_OUTPUT: '${{ steps.gemini_issue_analysis.outputs.summary }}'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ steps.generate_token.outputs.token }}'
+          script: |-
+            const rawOutput = process.env.LABELS_OUTPUT;
+            core.info(`Raw output from model: ${rawOutput}`);
+            
+            let parsed;
+            try {
+              // 1. Try extracting from markdown block first (safest)
+              const jsonMatch = rawOutput.match(/```json\s*([\s\S]*?)\s*```/) || rawOutput.match(/```\s*([\s\S]*?)\s*```/);
+              const jsonString = jsonMatch ? jsonMatch[1].trim() : rawOutput.trim();
+              
+              // 2. If no block, try parsing the whole thing (maybe it is pure JSON)
+              // 3. If that fails, try to find the first '[' and last ']'
+              let toParse = jsonString;
+              if (!jsonMatch) {
+                const start = rawOutput.indexOf('[');
+                const end = rawOutput.lastIndexOf(']');
+                if (start !== -1 && end !== -1 && end > start) {
+                  toParse = rawOutput.substring(start, end + 1);
+                }
+              }
+              
+              parsed = JSON.parse(toParse);
+            } catch (err) {
+              core.setFailed(`Failed to parse triage result. Error: ${err.message}\nRaw output: ${rawOutput}`);
+              return;
+            }
+
+            if (!Array.isArray(parsed)) {
+               core.setFailed(`Expected JSON array but got: ${typeof parsed}`);
+               return;
+            }
+
+            core.info(`Parsed ${parsed.length} labels entries.`);
+
+            for (const entry of parsed) {
+              const issueNumber = entry.issue_number;
+              if (!issueNumber) {
+                core.info(`Skipping entry with no issue number: ${JSON.stringify(entry)}`);
+                continue;
+              }
+
+              const labelsToAdd = entry.labels_to_set || [];
+
+              if (labelsToAdd.length > 0) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: labelsToAdd
+                });
+                core.info(`Successfully added labels for #${issueNumber}: ${labelsToAdd.join(', ')}`);
+              }
+            }
