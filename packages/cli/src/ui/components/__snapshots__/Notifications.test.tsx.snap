@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Notifications > renders init error 1`] = `
+"╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Initialization Error: Something went wrong Please check API key and configuration.               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+"
+`;
+
+exports[`Notifications > renders update notification 1`] = `
+"
+╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Update available                                                                                 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+"
+`;
