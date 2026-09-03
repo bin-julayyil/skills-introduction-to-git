@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ShellTool > getDescription > should return the non-windows description when not on windows 1`] = `
+"This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`.
+
+      Efficiency Guidelines:
+      - Quiet Flags: Always prefer silent or quiet flags (e.g., \`npm install --silent\`, \`git --no-pager\`) to reduce output volume while still capturing necessary information.
+      - Pagination: Always disable terminal pagination to ensure commands terminate (e.g., use \`git --no-pager\`, \`systemctl --no-pager\`, or set \`PAGER=cat\`)."
+`;
+
+exports[`ShellTool > getDescription > should return the windows description when on windows 1`] = `
+"This tool executes a given shell command as \`powershell.exe -NoProfile -Command <command>\`. Command can start background processes using PowerShell constructs such as \`Start-Process -NoNewWindow\` or \`Start-Job\`.
+
+      Efficiency Guidelines:
+      - Quiet Flags: Always prefer silent or quiet flags (e.g., \`npm install --silent\`, \`git --no-pager\`) to reduce output volume while still capturing necessary information.
+      - Pagination: Always disable terminal pagination to ensure commands terminate (e.g., use \`git --no-pager\`, \`systemctl --no-pager\`, or set \`PAGER=cat\`)."
+`;
+
+exports[`ShellTool > getSchema > should return the base schema when no modelId is provided 1`] = `
+"This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`.
+
+      Efficiency Guidelines:
+      - Quiet Flags: Always prefer silent or quiet flags (e.g., \`npm install --silent\`, \`git --no-pager\`) to reduce output volume while still capturing necessary information.
+      - Pagination: Always disable terminal pagination to ensure commands terminate (e.g., use \`git --no-pager\`, \`systemctl --no-pager\`, or set \`PAGER=cat\`)."
+`;
+
+exports[`ShellTool > getSchema > should return the schema from the resolver when modelId is provided 1`] = `
+"This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`.
+
+      Efficiency Guidelines:
+      - Quiet Flags: Always prefer silent or quiet flags (e.g., \`npm install --silent\`, \`git --no-pager\`) to reduce output volume while still capturing necessary information.
+      - Pagination: Always disable terminal pagination to ensure commands terminate (e.g., use \`git --no-pager\`, \`systemctl --no-pager\`, or set \`PAGER=cat\`)."
+`;
