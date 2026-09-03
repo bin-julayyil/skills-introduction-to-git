@@ -1,0 +1,9 @@
+{
+  "experimental": {
+    "plan": true,
+    "enableAgentHarness": true
+  },
+  "general": {
+    "devtools": true
+  }
+}
